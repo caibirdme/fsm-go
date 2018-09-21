@@ -36,7 +36,8 @@ type Callback func(Event) bool
 // StateMachine ...
 type StateMachine interface {
 	// Emit emits an Event and makes the transformation occur, thread unsafe
-	Emit(Event)
+	// If state transfer successfully, return true, or return false
+	Emit(Event) bool
 }
 
 // NewFSM is the constructor for a finite state machine
@@ -76,21 +77,24 @@ type stateMachineImpl struct {
 	ignore  Callback
 }
 
-func (m *stateMachineImpl) Emit(e Event) {
+func (m *stateMachineImpl) Emit(e Event) bool {
 	t := e.Type()
 	nextState, ok := m.graph[m.current][t]
 	if !ok {
 		if m.ignore != nil {
 			m.ignore(e)
 		}
-		return
+		return false
 	}
-	state, cb := nextState.state, nextState.cb
-	if cb != nil {
-		if cb(e) {
+	state, allowTrans := nextState.state, nextState.cb
+	if allowTrans != nil {
+		if allowTrans(e) {
 			m.current = state
+		} else {
+			return false
 		}
 	} else {
 		m.current = state
 	}
+	return true
 }
