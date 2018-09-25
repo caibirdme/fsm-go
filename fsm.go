@@ -38,6 +38,8 @@ type StateMachine interface {
 	// Emit emits an Event and makes the transformation occur, thread unsafe
 	// If state transfer successfully, return true, or return false
 	Emit(Event) bool
+	// CurrentState returns current state
+	CurrentState() StateNode
 }
 
 // NewFSM is the constructor for a finite state machine
@@ -97,4 +99,8 @@ func (m *stateMachineImpl) Emit(e Event) bool {
 		m.current = state
 	}
 	return true
+}
+
+func (m *stateMachineImpl) CurrentState() StateNode {
+	return m.current
 }
